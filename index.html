@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Professional GST Calculator</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f4f6f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vi;
+            padding: 20px;
+        }
+
+        .calculator-card {
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+            width: 100%;
+            max-width: 450px;
+        }
+
+        h2 {
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        input[type="number"], select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input[type="number"]:focus, select:focus {
+            border-color: #007bff;
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 5px;
+        }
+
+        .radio-label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            color: #444;
+        }
+
+        .radio-label input {
+            cursor: pointer;
+            width: 16px;
+            height: 16px;
+        }
+
+        button {
+            width: 100%;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 14px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .results-container {
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 2px dashed #e2e8f0;
+        }
+
+        .result-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            font-size: 15px;
+            color: #555;
+        }
+
+        .result-row.total {
+            font-size: 18px;
+            font-weight: bold;
+            color: #111;
+            margin-top: 5px;
+            padding-top: 5px;
+        }
+
+        .result-value {
+            font-weight: 600;
+            color: #222;
+        }
+
+        .result-row.total .result-value {
+            color: #28a745;
+        }
+    </style>
+</head>
+<body>
+
+<div class="calculator-card">
+    <h2>GST Calculator</h2>
+    
+    <!-- Input Amount -->
+    <div class="form-group">
+        <label for="amount">Amount (₹)</label>
+        <input type="number" id="amount" placeholder="Enter initial amount" value="1000" min="0" step="any">
+    </div>
+
+    <!-- GST Rate Slabs -->
+    <div class="form-group">
+        <label for="gstRate">GST Rate (%)</label>
+        <select id="gstRate">
+            <option value="5">5%</option>
+            <option value="12">12%</option>
+            <option value="18" selected>18%</option>
+            <option value="28">28%</option>
+        </select>
+    </div>
+
+    <!-- Tax Type: Inclusive or Exclusive -->
+    <div class="form-group">
+        <label>Tax Type</label>
+        <div class="radio-group">
+            <label class="radio-label">
+                <input type="radio" name="taxType" value="exclusive" checked> GST Exclusive
+            </label>
+            <label class="radio-label">
+                <input type="radio" name="taxType" value="inclusive"> GST Inclusive
+            </label>
+        </div>
+    </div>
+
+    <button onclick="calculateGST()">Calculate</button>
+
+    <!-- Calculation Breakdowns -->
+    <div class="results-container">
+        <div class="result-row">
+            <span>Net Price (Base Amount):</span>
+            <span class="result-value" id="resBaseAmount">₹0.00</span>
+        </div>
+        <div class="result-row">
+            <span>CGST:</span>
+            <span class="result-value" id="resCGST">₹0.00</span>
+        </div>
+        <div class="result-row">
+            <span>SGST / UTGST:</span>
+            <span class="result-value" id="resSGST">₹0.00</span>
+        </div>
+        <div class="result-row">
+            <span>Total GST Amount:</span>
+            <span class="result-value" id="resTotalGST">₹0.00</span>
+        </div>
+        <div class="result-row total">
+            <span>Total Gross Amount:</span>
+            <span class="result-value" id="resGrossAmount">₹0.00</span>
+        </div>
+    </div>
+</div>
+
+<script>
+    function calculateGST() {
+        // Retrieve inputs
+        const amount = parseFloat(document.getElementById('amount').value);
+        const gstRate = parseFloat(document.getElementById('gstRate').value);
+        const taxType = document.querySelector('input[name="taxType"]:checked').value;
+
+        // Validation for empty or invalid numerical values
+        if (isNaN(amount) || amount < 0) {
+            alert("Please enter a valid positive amount.");
+            return;
+        }
+
+        let baseAmount = 0;
+        let gstAmount = 0;
+        let totalAmount = 0;
+
+        // Mathematical execution logic
+        if (taxType === 'exclusive') {
+            // Formula: GST Extra
+            baseAmount = amount;
+            gstAmount = (amount * gstRate) / 100;
+            totalAmount = amount + gstAmount;
+        } else {
+            // Formula: GST Extract
+            totalAmount = amount;
+            gstAmount = amount - (amount * (100 / (100 + gstRate)));
+            baseAmount = totalAmount - gstAmount;
+        }
+
+        // Intra-state split calculation (50% CGST, 50% SGST)
+        const halfGST = gstAmount / 2;
+
+        // Render localized currency figures cleanly
+        document.getElementById('resBaseAmount').innerText = '₹' + baseAmount.toFixed(2);
+        document.getElementById('resCGST').innerText = '₹' + halfGST.toFixed(2);
+        document.getElementById('resSGST').innerText = '₹' + halfGST.toFixed(2);
+        document.getElementById('resTotalGST').innerText = '₹' + gstAmount.toFixed(2);
+        document.getElementById('resGrossAmount').innerText = '₹' + totalAmount.toFixed(2);
+    }
+
+    // Trigger initial calculation upon widget mount
+    window.onload = calculateGST;
+</script>
+
+</body>
+</html>
